@@ -1,6 +1,7 @@
 import base64
 import requests 
 import json
+import traceback
 from typing import Dict, Any, Optional, List
 
 STABILITY_API_HOST = "https://api.stability.ai"
@@ -53,14 +54,11 @@ class ImageGenerator:
             print("  [ERROR] Stability AI: 'engine_id'가 제공되어야 합니다 (예: 'stable-diffusion-xl-1024-v1-0').")
             return None
 
-        # 모델에 따른 기본 해상도 설정 (설정 파일에서 덮어쓸 수 있음)
-        # SDXL 계열 모델은 주로 1024x1024, SD 1.x/2.x는 512x512
-        # SD3는 1024x1024가 일반적입니다.
         if "stable-diffusion-3" in engine_id:
             default_width, default_height = (1024, 1024)
-        elif "xl" in engine_id: # SDXL
+        elif "xl" in engine_id:
             default_width, default_height = (1024, 1024)
-        else: # SD 1.5, 1.6, 2.1 등
+        else:
             default_width, default_height = (512, 512)
 
         text_prompts = [{"text": image_prompt_text, "weight": 1.0}]
@@ -74,17 +72,15 @@ class ImageGenerator:
             "height": image_model_configuration.get("height", default_height),
             "width": image_model_configuration.get("width", default_width),
             "samples": image_model_configuration.get("samples", 1),
-            "steps": image_model_configuration.get("steps", 40), # SD3는 28-30 스텝도 좋은 결과
+            "steps": image_model_configuration.get("steps", 40), 
         }
 
-        # 선택적 파라미터 추가
         if "seed" in image_model_configuration:
             payload["seed"] = image_model_configuration["seed"]
         if "style_preset" in image_model_configuration:
             payload["style_preset"] = image_model_configuration["style_preset"]
         if "sampler" in image_model_configuration:
             payload["sampler"] = image_model_configuration["sampler"]
-        # 필요한 경우 'clip_guidance_preset' 등 다른 파라미터도 추가 가능
 
         print(f"\n[ImageGenSAI] Requesting image(s) from Stability AI engine '{engine_id}'...")
         print(f"  Prompt: '{image_prompt_text[:200]}...'")
@@ -93,13 +89,10 @@ class ImageGenerator:
         print(f"  Payload (partial): samples={payload['samples']}, HxW=({payload['height']}x{payload['width']}), steps={payload['steps']}, cfg_scale={payload['cfg_scale']}")
 
         api_url = f"{STABILITY_API_HOST}/v1/generation/{engine_id}/text-to-image"
-        # 참고: Stable Diffusion 3와 같은 최신 모델은 다른 API 엔드포인트(예: /v2beta/...)를 사용할 수 있습니다.
-        # 문서를 확인하여 모델에 맞는 정확한 엔드포인트를 사용해야 합니다.
-        # 이 코드는 일반적인 /v1 엔드포인트를 기준으로 작성되었습니다.
 
         headers = {
             "Content-Type": "application/json",
-            "Accept": "application/json", # 응답을 JSON으로 받음
+            "Accept": "application/json", 
             "Authorization": f"Bearer {api_key}"
         }
 
@@ -108,9 +101,9 @@ class ImageGenerator:
                 api_url,
                 headers=headers,
                 json=payload,
-                timeout=180 # 이미지 생성에 시간이 걸릴 수 있으므로 타임아웃을 충분히 설정 (예: 180초)
+                timeout=180 
             )
-            response.raise_for_status() # HTTP 오류 발생 시 예외 발생 (4xx, 5xx 상태 코드)
+            response.raise_for_status() 
             
             response_json = response.json()
             
@@ -128,7 +121,7 @@ class ImageGenerator:
             
             if not generated_images_bytes:
                 print("  -> No images successfully generated or found in the response.")
-                print(f"  Raw API response JSON: {json.dumps(response_json, indent=2)}") # 디버깅을 위해 전체 JSON 응답 출력
+                print(f"  Raw API response JSON: {json.dumps(response_json, indent=2)}")
                 return None
 
             print(f"  -> Decoded {len(generated_images_bytes)} image(s) from Stability AI.")
@@ -138,18 +131,16 @@ class ImageGenerator:
             error_message = f"HTTP error occurred: {http_err}"
             if http_err.response is not None:
                 try:
-                    # 에러 응답이 JSON 형태일 경우 상세 내용 파싱 시도
                     error_detail = http_err.response.json()
                     error_message += f" - Detail: {json.dumps(error_detail, indent=2)}"
-                except ValueError: # 응답이 JSON이 아닐 경우 원본 텍스트 사용
+                except ValueError: 
                     error_message += f" - Raw response: {http_err.response.text}"
             print(f"  -> {error_message}")
             return None
-        except requests.exceptions.RequestException as req_err: # 타임아웃, 연결 오류 등
+        except requests.exceptions.RequestException as req_err: 
             print(f"  -> Request exception occurred: {req_err}")
             return None
-        except Exception as e: # 기타 예외 (JSON 파싱 실패 등 포함 가능)
+        except Exception as e: 
             print(f"  -> An unexpected error occurred: {e}")
-            # import traceback
-            # print(traceback.format_exc()) # 개발 시 상세 스택 트레이스 확인용
+            print(traceback.format_exc())
             return None

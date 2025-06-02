@@ -1,10 +1,9 @@
-# image_prompt_generator.py
 from typing import Dict, Any, Optional
-import google.generativeai as genai # 만약 이 모듈도 LLM을 직접 사용한다면 필요
+import google.generativeai as genai 
 
 class ImagePromptGenerator:
     def __init__(self, gemini_model: Optional[genai.GenerativeModel] = None):
-        self.model = gemini_model # LLM을 활용한 프롬프트 최적화 등에 사용 가능
+        self.model = gemini_model 
         if self.model:
             print("ImagePromptGenerator initialized with Gemini Model.")
         else:
@@ -60,6 +59,5 @@ class ImagePromptGenerator:
 
         """
         enhanced_prompt = self.model.generate_content(for_better_prompt).text
-        # enhanced_prompt = enhanced_prompt.replace("최종 프롬프트:", "").strip()
         print(f"  -> Generated Prompt (first 100 chars): {enhanced_prompt[:100].strip()}...")
         return enhanced_prompt.strip()

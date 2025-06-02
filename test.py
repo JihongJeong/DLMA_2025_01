@@ -42,7 +42,6 @@ composer = FinalCutComposer(gemini_model=gemini_llm_model)
 current_global_style = global_webtoon_style if global_webtoon_style is not None else config.GLOBAL_WEBTOON_STYLE
 current_image_config = image_gen_config if image_gen_config is not None else config.IMAGE_GEN_CONFIG.get("stability_ai", {})
 
-# 1. 입력 텍스트 분석 및 웹툰 요소 추출 (컷 분할)
 segmented_scenes = extractor.segment_scenes(novel_text)
 initial_scene_context = novel_text[:500]
 completed_webtoon_cuts = []

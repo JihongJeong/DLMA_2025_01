@@ -33,7 +33,7 @@ IMAGE_GEN_CONFIG = {
         #               "digital-art", "enhance", "fantasy-art", "isometric", "line-art",
         #               "low-poly", "modeling-compound", "neon-punk", "origami",
         #               "photographic", "pixel-art", "tile-texture"
-        # "negative_prompt": "blurry, low quality, text, watermark, signature, ugly, deformed",
+        "negative_prompt": "speech bubble, speech balloons, bubble, thought bubble, blurry, low quality, text, watermark, signature, ugly, deformed",
         # "sampler": "K_DPMPP_2M" 
     }
 }
